@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Expense calculator</title>
+  <style>
+    :root {
+      --paper: #f4efe4;
+      --sheet: #fbf7ef;
+      --ink: #1d1a16;
+      --muted: #5e574c;
+      --line: #e3dacb;
+      --rule: #9c3b32;
+      --accent: #1e4d3a;
+      --accent-ink: #f6f3ea;
+      --chip: #efe8da;
+      --danger: #8c3a2f;
+      --shadow: 0 16px 40px rgba(48, 36, 12, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { color-scheme: light; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      line-height: 1.45;
+    }
+
+    .sheet {
+      position: relative;
+      max-width: 42rem;
+      margin: 1.5rem auto 2.5rem;
+      padding: 1.75rem 1.5rem 1.5rem 2rem;
+      background: var(--sheet);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .sheet::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0.45rem;
+      background: var(--rule);
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+
+    .eyebrow {
+      margin: 0;
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    h1 {
+      margin: 0.15rem 0 0;
+      font-family: Palatino, "Palatino Linotype", "Iowan Old Style", Georgia, serif;
+      font-size: 1.85rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    label {
+      display: grid;
+      gap: 0.3rem;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    input, select, button {
+      font: inherit;
+      color: inherit;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.55rem 0.65rem;
+      border: 1px solid #cfc6b6;
+      border-radius: 2px;
+      background: #fffdf8;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 1rem;
+    }
+
+    input:focus, select:focus, button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .hero {
+      margin-top: 1.5rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .spent-label {
+      margin: 0;
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    #total {
+      margin: 0.1rem 0 0;
+      font-family: Palatino, "Palatino Linotype", "Iowan Old Style", Georgia, serif;
+      font-size: clamp(2.8rem, 8vw, 4.4rem);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    #count {
+      margin: 0.45rem 0 0;
+      color: var(--muted);
+    }
+
+    .budget-row {
+      display: grid;
+      grid-template-columns: minmax(8rem, 12rem) 1fr;
+      gap: 1rem;
+      align-items: end;
+      margin-top: 1.25rem;
+    }
+
+    #remaining {
+      margin: 0;
+      padding-bottom: 0.55rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #remaining.over { color: var(--danger); }
+
+    form {
+      display: grid;
+      grid-template-columns: 1.4fr 0.8fr 0.9fr 0.9fr auto;
+      gap: 0.7rem;
+      align-items: end;
+      margin-top: 1.25rem;
+    }
+
+    button {
+      border: 0;
+      border-radius: 2px;
+      padding: 0.62rem 0.9rem;
+      background: var(--accent);
+      color: var(--accent-ink);
+      cursor: pointer;
+    }
+
+    button:hover { background: #163c2d; }
+
+    button.ghost {
+      background: transparent;
+      color: var(--danger);
+      padding-inline: 0.4rem;
+    }
+
+    button.ghost:hover { background: #f6ebe6; }
+
+    .error {
+      min-height: 1.2rem;
+      margin: 0.45rem 0 0;
+      color: var(--danger);
+      font-size: 0.92rem;
+    }
+
+    #filters button {
+      background: var(--chip);
+      color: var(--ink);
+    }
+
+    #filters button[aria-pressed="true"] {
+      background: var(--ink);
+      color: var(--sheet);
+    }
+
+    #filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 1.1rem;
+    }
+
+    #list {
+      list-style: none;
+      margin: 0.6rem 0 0;
+      padding: 0;
+    }
+
+    #list li {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 0.35rem 0.85rem;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .item-main { display: grid; gap: 0.1rem; }
+
+    #list .label { font-weight: 600; }
+
+    #list .meta { color: var(--muted); font-size: 0.92rem; }
+
+    #list .amount {
+      font-variant-numeric: tabular-nums;
+      font-family: Palatino, "Palatino Linotype", Georgia, serif;
+    }
+
+    #empty {
+      margin: 1rem 0 0;
+      color: var(--muted);
+    }
+
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: center;
+      margin-top: 1.25rem;
+    }
+
+    .footnote {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    #clear[hidden], #empty[hidden], #filters[hidden] { display: none; }
+
+    @media (max-width: 760px) {
+      .sheet { margin: 0; border-inline: 0; min-height: 100vh; }
+      header, .budget-row, .footer-row { display: block; }
+      header label, .budget-row label { margin-top: 1rem; }
+      form { grid-template-columns: 1fr 1fr; }
+      form label:first-child, form button { grid-column: 1 / -1; }
+      #list li { grid-template-columns: 1fr auto; }
+      #list .item-main { grid-column: 1; grid-row: 1 / span 2; }
+      #list .amount { grid-column: 2; grid-row: 1; justify-self: end; }
+      #list button { grid-column: 2; grid-row: 2; justify-self: end; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="sheet">
+    <header>
+      <div>
+        <p class="eyebrow">Personal ledger</p>
+        <h1>Expense calculator</h1>
+      </div>
+      <label>
+        Currency
+        <select id="currency"></select>
+      </label>
+    </header>
+
+    <section class="hero" aria-labelledby="spent-label">
+      <p id="spent-label" class="spent-label">Spent</p>
+      <p id="total">—</p>
+      <p id="count"></p>
+      <div class="budget-row">
+        <label>
+          Budget
+          <input id="budget" inputmode="decimal" autocomplete="off" placeholder="Optional">
+        </label>
+        <p id="remaining"></p>
+      </div>
+      <p id="budget-error" class="error" role="alert"></p>
+    </section>
+
+    <form id="form">
+      <label>
+        What
+        <input id="label" name="label" required maxlength="80" autocomplete="off" placeholder="Groceries">
+      </label>
+      <label>
+        Amount
+        <input id="amount" name="amount" required inputmode="decimal" autocomplete="off" placeholder="0.00">
+      </label>
+      <label>
+        Category
+        <select id="category" name="category"></select>
+      </label>
+      <label>
+        Date
+        <input id="date" name="date" type="date" required>
+      </label>
+      <button type="submit">Add</button>
+    </form>
+    <p id="form-error" class="error" role="alert"></p>
+
+    <div id="filters" role="group" aria-label="Filter by category" hidden></div>
+    <ul id="list"></ul>
+    <p id="empty">Nothing entered yet. Add a cost and the total updates here.</p>
+
+    <div class="footer-row">
+      <p class="footnote">Saved in this browser only. Amounts are not converted if you change currency.</p>
+      <button id="clear" class="ghost" type="button" hidden>Clear all</button>
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "expense-ledger-v1";
+    const CATEGORIES = ["Food", "Transit", "Home", "Health", "Fun", "Other"];
+    const CURRENCIES = ["USD", "EUR", "GBP", "INR", "JPY", "CAD", "AUD"];
+
+    const currencyEl = document.querySelector("#currency");
+    const budgetEl = document.querySelector("#budget");
+    const totalEl = document.querySelector("#total");
+    const countEl = document.querySelector("#count");
+    const remainingEl = document.querySelector("#remaining");
+    const budgetErrorEl = document.querySelector("#budget-error");
+    const form = document.querySelector("#form");
+    const formErrorEl = document.querySelector("#form-error");
+    const amountEl = document.querySelector("#amount");
+    const categoryEl = document.querySelector("#category");
+    const dateEl = document.querySelector("#date");
+    const filtersEl = document.querySelector("#filters");
+    const listEl = document.querySelector("#list");
+    const emptyEl = document.querySelector("#empty");
+    const clearEl = document.querySelector("#clear");
+
+    let state = load();
+    let filter = "All";
+
+    CURRENCIES.forEach((code) => {
+      const option = document.createElement("option");
+      option.value = code;
+      option.textContent = code;
+      currencyEl.append(option);
+    });
+    CATEGORIES.forEach((name) => {
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      categoryEl.append(option);
+    });
+
+    currencyEl.value = state.currency;
+    dateEl.value = todayISO();
+    syncAmountPlaceholder();
+    if (state.budgetMinor != null) budgetEl.value = minorToInput(state.budgetMinor, state.currency);
+    render();
+
+    currencyEl.addEventListener("change", () => {
+      const next = currencyEl.value;
+      if (next === state.currency) return;
+      const hasMoney = state.items.length > 0 || state.budgetMinor != null;
+      if (hasMoney) {
+        const ok = confirm("Changing currency does not convert existing amounts. 10.00 stays 10.00 in the new currency. Continue?");
+        if (!ok) {
+          currencyEl.value = state.currency;
+          return;
+        }
+      }
+      state.currency = next;
+      syncAmountPlaceholder();
+      if (state.budgetMinor != null) budgetEl.value = minorToInput(state.budgetMinor, state.currency);
+      save();
+      render();
+    });
+
+    budgetEl.addEventListener("change", () => {
+      const raw = budgetEl.value.trim();
+      if (!raw) {
+        state.budgetMinor = null;
+        budgetErrorEl.textContent = "";
+        save();
+        render();
+        return;
+      }
+      const parsed = parseMinor(raw, scaleOf(state.currency));
+      if (parsed.error) {
+        budgetErrorEl.textContent = parsed.error;
+        budgetEl.value = state.budgetMinor == null ? "" : minorToInput(state.budgetMinor, state.currency);
+        return;
+      }
+      state.budgetMinor = parsed.minor;
+      budgetErrorEl.textContent = "";
+      budgetEl.value = minorToInput(parsed.minor, state.currency);
+      save();
+      render();
+    });
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      formErrorEl.textContent = "";
+      const label = form.label.value.trim();
+      const parsed = parseMinor(form.amount.value, scaleOf(state.currency));
+      const category = form.category.value;
+      const date = form.date.value;
+      if (!label) {
+        formErrorEl.textContent = "Name this expense.";
+        form.label.focus();
+        return;
+      }
+      if (parsed.error) {
+        formErrorEl.textContent = parsed.error;
+        amountEl.focus();
+        return;
+      }
+      if (!CATEGORIES.includes(category) || !isISODate(date)) {
+        formErrorEl.textContent = "Choose a category and a real date.";
+        return;
+      }
+      state.items.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        label,
+        category,
+        date,
+        minor: parsed.minor,
+        created: Date.now()
+      });
+      save();
+      form.label.value = "";
+      form.amount.value = "";
+      render();
+      form.label.focus();
+    });
+
+    clearEl.addEventListener("click", () => {
+      if (!confirm("Remove every expense and the budget from this browser?")) return;
+      state.items = [];
+      state.budgetMinor = null;
+      budgetEl.value = "";
+      filter = "All";
+      save();
+      render();
+    });
+
+    filtersEl.addEventListener("click", (event) => {
+      const button = event.target.closest("button");
+      if (!button) return;
+      filter = button.dataset.category;
+      render();
+    });
+
+    listEl.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-id]");
+      if (!button) return;
+      state.items = state.items.filter((item) => item.id !== button.dataset.id);
+      save();
+      render();
+    });
+
+    function load() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        if (!raw || typeof raw !== "object") return fresh();
+        const currency = CURRENCIES.includes(raw.currency) ? raw.currency : "USD";
+        const items = Array.isArray(raw.items) ? raw.items.filter(validItem) : [];
+        const budgetMinor = Number.isSafeInteger(raw.budgetMinor) && raw.budgetMinor > 0 ? raw.budgetMinor : null;
+        return { currency, items, budgetMinor };
+      } catch {
+        return fresh();
+      }
+    }
+
+    function fresh() {
+      return { currency: "USD", items: [], budgetMinor: null };
+    }
+
+    function validItem(item) {
+      return item
+        && typeof item.id === "string"
+        && typeof item.label === "string"
+        && CATEGORIES.includes(item.category)
+        && isISODate(item.date)
+        && Number.isSafeInteger(item.minor)
+        && item.minor > 0;
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {
+        formErrorEl.textContent = "This browser blocked saving. The total on screen is still correct.";
+      }
+    }
+
+    function render() {
+      const spent = state.items.reduce((sum, item) => sum + item.minor, 0);
+      totalEl.textContent = formatMinor(spent, state.currency);
+      const noun = state.items.length === 1 ? "expense" : "expenses";
+      countEl.textContent = state.items.length
+        ? `${state.items.length} ${noun}`
+        : "No expenses yet";
+
+      remainingEl.classList.remove("over");
+      if (state.budgetMinor == null) {
+        remainingEl.textContent = "";
+      } else {
+        const left = state.budgetMinor - spent;
+        if (left >= 0) {
+          remainingEl.textContent = `${formatMinor(left, state.currency)} left of ${formatMinor(state.budgetMinor, state.currency)}`;
+        } else {
+          remainingEl.textContent = `${formatMinor(-left, state.currency)} over ${formatMinor(state.budgetMinor, state.currency)}`;
+          remainingEl.classList.add("over");
+        }
+      }
+
+      const visible = filter === "All" ? state.items : state.items.filter((item) => item.category === filter);
+      const ordered = visible.slice().sort((a, b) => b.date.localeCompare(a.date) || (b.created || 0) - (a.created || 0));
+
+      listEl.replaceChildren();
+      ordered.forEach((item) => {
+        const li = document.createElement("li");
+        const main = document.createElement("div");
+        main.className = "item-main";
+        const name = document.createElement("span");
+        name.className = "label";
+        name.textContent = item.label;
+        const meta = document.createElement("span");
+        meta.className = "meta";
+        meta.textContent = `${item.category} · ${formatDate(item.date)}`;
+        main.append(name, meta);
+        const amount = document.createElement("span");
+        amount.className = "amount";
+        amount.textContent = formatMinor(item.minor, state.currency);
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "ghost";
+        remove.dataset.id = item.id;
+        remove.textContent = "Remove";
+        remove.setAttribute("aria-label", `Remove ${item.label}`);
+        li.append(main, amount, remove);
+        listEl.append(li);
+      });
+
+      emptyEl.hidden = ordered.length > 0;
+      emptyEl.textContent = state.items.length === 0
+        ? "Nothing entered yet. Add a cost and the total updates here."
+        : "Nothing in this category.";
+      clearEl.hidden = state.items.length === 0 && state.budgetMinor == null;
+
+      const used = CATEGORIES.filter((name) => state.items.some((item) => item.category === name));
+      if (!used.includes(filter) && filter !== "All") filter = "All";
+      filtersEl.hidden = used.length < 2;
+      filtersEl.replaceChildren();
+      ["All", ...used].forEach((name) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.dataset.category = name;
+        button.textContent = name === "All" ? "All" : `${name} ${formatMinor(sumCategory(name), state.currency)}`;
+        button.setAttribute("aria-pressed", String(filter === name));
+        filtersEl.append(button);
+      });
+
+      syncAmountPlaceholder();
+    }
+
+    function sumCategory(name) {
+      return state.items.reduce((sum, item) => item.category === name ? sum + item.minor : sum, 0);
+    }
+
+    function syncAmountPlaceholder() {
+      const digits = scaleOf(state.currency);
+      amountEl.placeholder = digits === 0 ? "0" : `0.${"0".repeat(digits)}`;
+    }
+
+    function scaleOf(currency) {
+      return new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits;
+    }
+
+    function parseMinor(raw, digits) {
+      const body = String(raw).trim().replace(/\s/g, "").replace(/[^\d.,]/g, "");
+      if (!body || !/\d/.test(body)) return { error: "Enter an amount." };
+
+      const commas = (body.match(/,/g) || []).length;
+      const dots = (body.match(/\./g) || []).length;
+      const tooFine = `Use at most ${digits} decimal place${digits === 1 ? "" : "s"}.`;
+      let normalized;
+
+      if (commas && dots) {
+        const last = Math.max(body.lastIndexOf(","), body.lastIndexOf("."));
+        const decimalSep = body[last];
+        const thousandsSep = decimalSep === "," ? "." : ",";
+        const head = body.slice(0, last);
+        const tail = body.slice(last + 1);
+        const groups = head.split(thousandsSep);
+        if (head.includes(decimalSep) || groups.some((group, index) => index > 0 && group.length !== 3)) {
+          return { error: "Check the amount format." };
+        }
+        normalized = `${groups.join("")}.${tail}`;
+      } else if (commas > 1 || dots > 1) {
+        const sep = commas ? "," : ".";
+        const groups = body.split(sep);
+        if (groups.slice(1).some((group) => group.length !== 3)) return { error: "Check the amount format." };
+        normalized = groups.join("");
+      } else if (commas === 1 || dots === 1) {
+        const sep = commas ? "," : ".";
+        const [head, tail] = body.split(sep);
+        if (digits === 0) {
+          if (tail.length === 3) normalized = head + tail;
+          else return { error: "This currency uses whole amounts only." };
+        } else if (tail.length <= digits) {
+          normalized = `${head}.${tail}`;
+        } else if (sep === "," && tail.length === 3) {
+          normalized = head + tail;
+        } else {
+          return { error: tooFine };
+        }
+      } else {
+        normalized = body;
+      }
+
+      if (!/^\d+(\.\d+)?$/.test(normalized)) return { error: "Enter a positive amount." };
+      const [whole, frac = ""] = normalized.split(".");
+      if (frac.length > digits) return { error: `Use at most ${digits} decimal place${digits === 1 ? "" : "s"}.` };
+      if (whole.length > 12) return { error: "That amount is too large." };
+      const factor = 10 ** digits;
+      const minor = Number(whole) * factor + (digits ? Number(frac.padEnd(digits, "0")) : 0);
+      if (!Number.isSafeInteger(minor)) return { error: "That amount is too large." };
+      if (minor <= 0) return { error: "Amount must be greater than zero." };
+      return { minor };
+    }
+
+    function formatMinor(minor, currency) {
+      const digits = scaleOf(currency);
+      const sign = minor < 0 ? -1 : 1;
+      const abs = Math.abs(minor);
+      const factor = 10 ** digits;
+      const whole = Math.trunc(abs / factor);
+      const fraction = digits ? String(abs % factor).padStart(digits, "0") : "";
+      const parts = new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency,
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      }).formatToParts(sign * whole);
+      return parts.map((part) => (part.type === "fraction" ? fraction : part.value)).join("");
+    }
+
+    function minorToInput(minor, currency) {
+      const digits = scaleOf(currency);
+      const factor = 10 ** digits;
+      const whole = Math.trunc(minor / factor);
+      if (!digits) return String(whole);
+      return `${whole}.${String(minor % factor).padStart(digits, "0")}`;
+    }
+
+    function todayISO() {
+      const now = new Date();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      return `${now.getFullYear()}-${month}-${day}`;
+    }
+
+    function isISODate(value) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+      const [year, month, day] = value.split("-").map(Number);
+      const date = new Date(year, month - 1, day);
+      return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+    }
+
+    function formatDate(iso) {
+      const [year, month, day] = iso.split("-").map(Number);
+      return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(year, month - 1, day));
+    }
+  </script>
+</body>
+</html>
